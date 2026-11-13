@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: camera-dashboards
+    folder: Cameras
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

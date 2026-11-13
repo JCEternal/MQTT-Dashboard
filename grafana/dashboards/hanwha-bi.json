@@ -1,0 +1,709 @@
+{
+  "title": "Hanwha \u2013 Business Intelligence",
+  "uid": "hanwha-bi",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "tags": [
+    "hanwha"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Overview",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "BI events",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT count(*) AS \"Events\" FROM bi_events WHERE $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Cameras reporting",
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT count(DISTINCT camera) AS \"Cameras\" FROM bi_events WHERE $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Last BI event",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT max(event_time) AS \"Last\" FROM bi_events WHERE ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeFromNow",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Last$/"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Counting (People, Vehicle, WiseAI Object Counting)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Total IN",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT coalesce(sum(count),0) AS \"IN\" FROM bi_events WHERE direction='IN' AND count IS NOT NULL AND direction IN ('IN','OUT') AND (report_type IS NULL OR report_type ILIKE '%punctual%') AND $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Total OUT",
+      "gridPos": {
+        "x": 8,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT coalesce(sum(count),0) AS \"OUT\" FROM bi_events WHERE direction='OUT' AND count IS NOT NULL AND direction IN ('IN','OUT') AND (report_type IS NULL OR report_type ILIKE '%punctual%') AND $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Net (IN \u2212 OUT)",
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT coalesce(sum(CASE direction WHEN 'IN' THEN count ELSE -count END),0) AS \"Net\"\nFROM bi_events WHERE count IS NOT NULL AND direction IN ('IN','OUT') AND (report_type IS NULL OR report_type ILIKE '%punctual%') AND $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Counts over time by object type & direction",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT $__timeGroupAlias(event_time, $__interval), coalesce(object_type,'Object') || ' ' || direction AS metric, sum(count) AS value\nFROM bi_events WHERE count IS NOT NULL AND direction IN ('IN','OUT') AND (report_type IS NULL OR report_type ILIKE '%punctual%') AND $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nGROUP BY 1, 2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        }
+      },
+      "interval": "15m"
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Totals by camera, counting rule & object type",
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT camera, analytic AS type, rule_name AS rule, coalesce(object_type,'Object') AS object_type,\n  sum(count) FILTER (WHERE direction='IN')  AS \"IN\",\n  sum(count) FILTER (WHERE direction='OUT') AS \"OUT\",\n  sum(count) AS total\nFROM bi_events WHERE count IS NOT NULL AND direction IN ('IN','OUT') AND (report_type IS NULL OR report_type ILIKE '%punctual%') AND $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nGROUP BY 1,2,3,4 ORDER BY total DESC"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "row",
+      "title": "Queue management",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 12,
+      "type": "bargauge",
+      "title": "Current queue length",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT DISTINCT ON (camera, rule_name) camera || ' \u00b7 ' || coalesce(rule_name,'queue') AS queue, count AS \"people\"\nFROM bi_events WHERE analytic ILIKE '%queue%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nORDER BY camera, rule_name, event_time DESC"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Queue length over time",
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 16,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT event_time AS time, camera || ' \u00b7 ' || coalesce(rule_name,'queue') AS metric, count AS value\nFROM bi_events WHERE $__timeFilter(event_time) AND analytic ILIKE '%queue%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "custom": {
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Queue summary (selected time range)",
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT camera || ' \u00b7 ' || coalesce(rule_name,'queue') AS queue,\n  (array_agg(count ORDER BY event_time DESC))[1] AS \"current\",\n  max(count) AS \"peak\",\n  count(*) AS \"changes\",\n  max(event_time) AS \"last change\"\nFROM bi_events WHERE $__timeFilter(event_time) AND analytic ILIKE '%queue%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nGROUP BY 1 ORDER BY \"peak\" DESC"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "row",
+      "title": "Crowd count",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 16,
+      "type": "bargauge",
+      "title": "Current crowd count",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT DISTINCT ON (camera, rule_name) camera || ' \u00b7 ' || coalesce(rule_name,'area') AS area, count AS \"people\"\nFROM bi_events WHERE analytic ILIKE '%crowd%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nORDER BY camera, rule_name, event_time DESC"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Crowd count over time",
+      "gridPos": {
+        "x": 8,
+        "y": 43,
+        "w": 16,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT event_time AS time, camera || ' \u00b7 ' || coalesce(rule_name,'area') AS metric, count AS value\nFROM bi_events WHERE $__timeFilter(event_time) AND analytic ILIKE '%crowd%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "custom": {
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "Crowd summary (selected time range)",
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 24,
+        "h": 6
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT camera || ' \u00b7 ' || coalesce(rule_name,'area') AS area,\n  (array_agg(count ORDER BY event_time DESC))[1] AS \"current\",\n  max(count) AS \"peak\",\n  (array_agg(event_time ORDER BY count DESC, event_time DESC))[1] AS \"peak time\",\n  count(*) AS \"changes\",\n  max(event_time) AS \"last change\"\nFROM bi_events WHERE $__timeFilter(event_time) AND analytic ILIKE '%crowd%' AND count IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nGROUP BY 1 ORDER BY \"peak\" DESC"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "row",
+      "title": "Latest BI events",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 57,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 20,
+      "type": "table",
+      "title": "Latest BI events",
+      "gridPos": {
+        "x": 0,
+        "y": 58,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "camdb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "camdb"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT event_time AS time, camera, analytic AS type, rule_name AS rule, object_type, direction, count, data::text AS data\nFROM bi_events WHERE $__timeFilter(event_time) AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) AND ('__all' IN ($rule) OR rule_name IN ($rule))\nORDER BY event_time DESC LIMIT 200"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "title": "Hanwha dashboards",
+      "type": "dashboards",
+      "tags": [
+        "hanwha"
+      ],
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "camera",
+        "label": "Camera",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "camdb"
+        },
+        "query": "SELECT DISTINCT camera FROM bi_events WHERE camera IS NOT NULL ORDER BY 1",
+        "definition": "SELECT DISTINCT camera FROM bi_events WHERE camera IS NOT NULL ORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "allValue": "'__all'",
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      },
+      {
+        "name": "analytic",
+        "label": "Type",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "camdb"
+        },
+        "query": "SELECT DISTINCT analytic FROM bi_events WHERE analytic IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) ORDER BY 1",
+        "definition": "SELECT DISTINCT analytic FROM bi_events WHERE analytic IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) ORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "allValue": "'__all'",
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      },
+      {
+        "name": "rule",
+        "label": "Rule / line",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "camdb"
+        },
+        "query": "SELECT DISTINCT rule_name FROM bi_events WHERE rule_name IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) ORDER BY 1",
+        "definition": "SELECT DISTINCT rule_name FROM bi_events WHERE rule_name IS NOT NULL AND ('__all' IN ($camera) OR camera IN ($camera)) AND ('__all' IN ($analytic) OR analytic IN ($analytic)) ORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "allValue": "'__all'",
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  }
+}

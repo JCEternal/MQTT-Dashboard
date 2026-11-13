@@ -1,0 +1,9 @@
+# Settings and passwords, created by install.sh. Never commit these.
+.env
+.env.backup.*
+
+# Local docker compose customisations (kept out so `git pull` never overwrites them)
+docker-compose.override.yml
+
+__pycache__/
+*.pyc
