@@ -57,7 +57,8 @@ Hanwha cameras ──MQTT──▶ cam-mosquitto (built-in broker, optional, por
 ### Key `.env` settings
 `COMPOSE_PROFILES` (`broker` or empty), `MQTT_HOST` (`mosquitto` for the built-in broker), `MQTT_PORT`,
 `BROKER_PUBLIC_PORT`, `MQTT_USER`, `MQTT_PASS`, `MQTT_TOPICS` (default `+/onvif-ej/#`),
-`CAMERA_NAMES` (`prefix=Name,prefix=Name`), `POSTGRES_*`, `GRAFANA_PORT`, `GRAFANA_ADMIN_*`, `TZ`.
+`CAMERA_NAMES` (`prefix=Name,prefix=Name`), `POSTGRES_*`, `GRAFANA_PORT`, `GRAFANA_ADMIN_*`, `TZ` (IANA zone name;
+install.sh offers a numbered North American menu plus "Other", defaulting to the previous .env value or the VM's zone).
 
 ---
 

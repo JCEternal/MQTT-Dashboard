@@ -53,6 +53,55 @@ ask_password() {
     done
 }
 
+# ask_timezone "default zone" -> echoes the chosen IANA zone name
+# Shows a numbered list of North American zones so nobody has to know the
+# exact spelling. "Other" lets you type any zone (e.g. Europe/London).
+TZ_MENU=(
+    "America/New_York|Eastern       - New York, Toronto, Detroit, Miami"
+    "America/Chicago|Central       - Chicago, Dallas, Winnipeg"
+    "America/Denver|Mountain      - Denver, Calgary, Salt Lake City"
+    "America/Phoenix|Arizona       - Phoenix (Mountain time, no daylight saving)"
+    "America/Los_Angeles|Pacific       - Los Angeles, Seattle, Vancouver"
+    "America/Anchorage|Alaska        - Anchorage, Juneau"
+    "Pacific/Honolulu|Hawaii        - Honolulu (no daylight saving)"
+    "America/Halifax|Atlantic      - Halifax, New Brunswick, PEI"
+    "America/St_Johns|Newfoundland  - St. John's (30 minutes off the hour)"
+    "UTC|UTC           - Universal time, never changes"
+)
+valid_tz() { [[ -n "$1" && "$1" != *..* && -f "/usr/share/zoneinfo/$1" ]]; }
+ask_timezone() {
+    local current="$1" i zone label default_choice="" reply n=${#TZ_MENU[@]}
+    for i in "${!TZ_MENU[@]}"; do
+        zone="${TZ_MENU[$i]%%|*}"; label="${TZ_MENU[$i]#*|}"
+        printf '  %2d) %s\n' $((i+1)) "$label" >&2
+        [[ "$zone" == "$current" ]] && default_choice=$((i+1))
+    done
+    printf '  %2d) Other - type the zone name yourself\n' $((n+1)) >&2
+    # If the current zone isn't one of the menu entries (e.g. America/Detroit),
+    # pressing Enter keeps it as it is.
+    if [[ -z "$default_choice" ]]; then
+        echo "  Current zone: ${current}  (press Enter to keep it)" >&2
+        default_choice="$current"
+    fi
+    while true; do
+        read -r -p "Choose 1-$((n+1)) [${default_choice}]: " reply
+        reply="${reply:-$default_choice}"
+        if [[ "$reply" =~ ^[0-9]+$ ]] && (( reply >= 1 && reply <= n )); then
+            echo "${TZ_MENU[$((reply-1))]%%|*}"; return
+        elif [[ "$reply" =~ ^[0-9]+$ ]] && (( reply == n+1 )); then
+            while true; do
+                read -r -p "  Zone name (e.g. America/Regina, Europe/London): " reply
+                if valid_tz "$reply"; then echo "$reply"; return; fi
+                echo "  ${yellow}'${reply}' isn't a known zone. Spelling and capitals matter (see: timedatectl list-timezones).${reset}" >&2
+            done
+        elif valid_tz "$reply"; then
+            echo "$reply"; return          # Enter on a non-menu current zone, or a typed name
+        else
+            echo "  ${yellow}Please enter a number from 1 to $((n+1)).${reset}" >&2
+        fi
+    done
+}
+
 # Files copied from Windows can have CRLF line endings, which break shell
 # scripts and .env values. Convert every text file to Unix line endings.
 fix_line_endings() {
@@ -89,7 +138,9 @@ HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 HOST_IP="${HOST_IP:-<this-server-ip>}"
 
 write_env=true
+OLD_TZ=""
 if [[ -f .env ]]; then
+    OLD_TZ="$(grep -m1 '^TZ=' .env 2>/dev/null | cut -d= -f2- || true)"
     echo
     if ask_yn "Existing settings (.env) found. Keep them?" "Y"; then
         write_env=false
@@ -149,8 +200,16 @@ if $write_env; then
     echo "Used only between the containers on this server; you won't need to type it again."
     POSTGRES_PASSWORD="$(ask_password "Database password")"
 
-    TZ_DEFAULT="$(timedatectl show -p Timezone --value 2>/dev/null || cat /etc/timezone 2>/dev/null || echo UTC)"
-    TZ_VALUE="$(ask "Time zone" "$TZ_DEFAULT")"
+    echo
+    echo "${bold}--- Time zone ---${reset}"
+    echo "Used for times in the logs and database. Daylight saving is handled automatically."
+    # Default: the zone from the previous .env if re-running, otherwise this server's zone.
+    TZ_DEFAULT="${OLD_TZ:-}"
+    valid_tz "$TZ_DEFAULT" || TZ_DEFAULT="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+    valid_tz "$TZ_DEFAULT" || TZ_DEFAULT="$(cat /etc/timezone 2>/dev/null || true)"
+    valid_tz "$TZ_DEFAULT" || TZ_DEFAULT="America/New_York"
+    TZ_VALUE="$(ask_timezone "$TZ_DEFAULT")"
+    info "Time zone: ${TZ_VALUE}"
 
     umask 077
     cat > .env <<EOF
